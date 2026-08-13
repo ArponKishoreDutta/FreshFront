@@ -1,0 +1,45 @@
+name: Deploy FreshFront
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout FreshFront
+        uses: actions/checkout@v6
+
+      - name: Create production config.php
+        run: |
+          cat > config.php <<'PHP'
+          <?php
+
+          $db_name = "mysql:host=sql206.infinityfree.com;port=3306;dbname=if0_42642077_shop_db;charset=utf8mb4";
+          $username = "if0_42642077";
+          $password = "${{ secrets.DB_PASSWORD }}";
+
+          $conn = new PDO($db_name, $username, $password);
+          $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+          ?>
+          PHP
+
+      - name: Deploy to InfinityFree
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ftpupload.net
+          username: if0_42642077
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftp
+          port: 21
+          server-dir: htdocs/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/shop_db.sql
+            **/README.md
