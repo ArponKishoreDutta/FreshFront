@@ -20,4 +20,4 @@ Thumbs.db
 *.temp
 
 # PHP runtime/session files
-*.sess
+*.sessconfig.php

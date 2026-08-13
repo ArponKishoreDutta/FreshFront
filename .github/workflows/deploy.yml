@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -11,22 +12,33 @@ jobs:
 
     steps:
       - name: Checkout FreshFront
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
+
+      - name: Remove repository config.php
+        run: |
+          rm -f config.php
 
       - name: Create production config.php
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          cat > config.php <<'PHP'
+          cat > config.php <<PHP
           <?php
 
-          $db_name = "mysql:host=sql206.infinityfree.com;port=3306;dbname=if0_42642077_shop_db;charset=utf8mb4";
-          $username = "if0_42642077";
-          $password = "${{ secrets.DB_PASSWORD }}";
+          \$db_name = "mysql:host=sql206.infinityfree.com;port=3306;dbname=if0_42642077_shop_db;charset=utf8mb4";
+          \$username = "if0_42642077";
+          \$password = "${DB_PASSWORD}";
 
-          $conn = new PDO($db_name, $username, $password);
-          $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+          \$conn = new PDO(\$db_name, \$username, \$password);
+          \$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
           ?>
           PHP
+
+      - name: Verify config.php
+        run: |
+          test -s config.php
+          echo "config.php created successfully."
 
       - name: Deploy to InfinityFree
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
